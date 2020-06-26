@@ -1,39 +1,71 @@
 # Importing the libraries
 import numpy as np
-import matplotlib.pyplot as plt
+
 import pandas as pd
 import pickle
 
-dataset = pd.read_csv('hiring.csv')
+import numpy as np
+from sklearn.model_selection import train_test_split
 
-dataset['experience'].fillna(0, inplace=True)
+from sklearn.ensemble import RandomForestClassifier,AdaBoostClassifier,GradientBoostingClassifier
 
-dataset['test_score'].fillna(dataset['test_score'].mean(), inplace=True)
+from sklearn.svm import SVC
 
-X = dataset.iloc[:, :3]
+from sklearn.naive_bayes import GaussianNB
 
-#Converting words to integer values
-def convert_to_int(word):
-    word_dict = {'one':1, 'two':2, 'three':3, 'four':4, 'five':5, 'six':6, 'seven':7, 'eight':8,
-                'nine':9, 'ten':10, 'eleven':11, 'twelve':12, 'zero':0, 0: 0}
-    return word_dict[word]
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
-X['experience'] = X['experience'].apply(lambda x : convert_to_int(x))
+from sklearn.linear_model import LogisticRegression
 
-y = dataset.iloc[:, -1]
+from sklearn.model_selection import StratifiedShuffleSplit
 
-#Splitting Training and Test Set
-#Since we have a very small dataset, we will train our model with all availabe data.
+from sklearn.metrics import roc_auc_score
 
-from sklearn.linear_model import LinearRegression
-regressor = LinearRegression()
 
-#Fitting model with trainig data
-regressor.fit(X, y)
 
-# Saving model to disk
-pickle.dump(regressor, open('model.pkl','wb'))
 
-# Loading model to compare the results
+
+data = pd.read_csv("bank-full.csv", sep=";",header='infer')
+
+data_new = pd.get_dummies(data, columns=['job','marital',
+                                         'education','default',
+                                         'housing','loan',
+                                         'contact','month',
+                                         'poutcome'])
+#Class column into binary format
+data_new.y.replace(('yes', 'no'), (1, 0), inplace=True)
+
+
+y = pd.DataFrame(data_new['y'])
+X = data_new[['duration', 'balance', 'age', 'day', 'poutcome_success', 'pdays', 'campaign', 'housing_yes']]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=101)
+
+from sklearn.preprocessing import StandardScaler
+
+
+clf = LinearDiscriminantAnalysis()
+
+clf.fit(X_train,y_train.values.ravel())
+
+predictions = clf.predict(X_test)
+from sklearn.metrics import classification_report
+print(classification_report(y_test,predictions))
+print(clf.score(X_test, y_test))
+print(clf.score(X_train, y_train))
+
+print(clf.predict([[450, 2143, 0, 0, 0, 23, 0, 0]]))
+print(clf.predict([[43, 200000, 50, 5, 0, 200, 1, 1]]))
+
+
+pickle.dump(clf, open('model.pkl','wb'))
+
 model = pickle.load(open('model.pkl','rb'))
-print(model.predict([[2, 9, 6]]))
+
+
+print(model.predict([[245, 200000, 50, 5, 0, 200, 1, 1]]))
+
+print(model.predict_proba([[245, 200000, 50, 5, 0, 200, 1, 1]]))
+
+
+# Scroll complete output to view all the accuracy scores and bar graph.+
